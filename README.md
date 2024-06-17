@@ -1,7 +1,9 @@
 # What is this?
 
-a simple blog made in express (w/ typescript) with authentication and prisma orm.
+-   a simple blog made in express (w/ typescript) with authentication and prisma orm.
 
-# Why?
+-   frontend made in react + tailwind css (w/ typescript)
 
-Insanity.
+# Why does this even exist?
+
+pure insanity.

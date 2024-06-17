@@ -14,15 +14,15 @@ datasource db {
 }
 
 model User {
-	uuid				String		@id	@db.Uuid		@unique
+	uuid				String		@id	@db.Uuid @default(uuid())		@unique
 	created_at			DateTime	@default(now())
-	username			String							@unique
+	username			String											@unique
 	encrypted_secret	String
 	posts				Post[]
 }
 
 model Post {
-	uuid				String		@id	@db.Uuid		@unique
+	uuid				String		@id	@db.Uuid						@unique
 	created_at			DateTime	@default(now())
 	title				String
 	description			String?

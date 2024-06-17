@@ -10,6 +10,7 @@ dotenv.config({
 export function getEnvironmentOptions(...options: string[]): {
 	BACKEND_PORT?: number;
 	JWT_SECRET?: string;
+	LOG_LEVEL?: number;
 } {
 	const requestedEnvOptions: any = {};
 	if (options.length <= 0) {
