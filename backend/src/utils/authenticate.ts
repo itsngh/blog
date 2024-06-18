@@ -3,9 +3,10 @@ import { prisma, retrieveUserSecret } from "./database";
 import {
 	verify as verifyToken,
 	sign as signToken,
+	JwtPayload,
 	// JwtPayload,
 	// JsonWebTokenError,
-	// TokenExpiredError,
+	TokenExpiredError,
 } from "jsonwebtoken";
 import { getEnvironmentOptions } from "./environment";
 import { User, Auth } from "@prisma/client";
@@ -28,15 +29,20 @@ export async function validatePassword(
 
 export function validateToken(token: string) {
 	if (!envOptions["JWT_SECRET"]) throw new Error("UndefinedKeyValue");
+	let userPayload: string | JwtPayload | null = null;
 	try {
-		const userPayload = verifyToken(token, envOptions["JWT_SECRET"]);
+		userPayload = verifyToken(token, envOptions["JWT_SECRET"]);
 		return userPayload;
 	} catch (err) {
-		// if (err instanceof TokenExpiredError)
-		// 	log("Token provided has expired!", 4);
-		// else if (err instanceof JsonWebTokenError) log("Invalid signature!", 2);
-		return null;
+		if (err instanceof TokenExpiredError)
+			// TODO: add rotating refresh keys functionality here
+			return null;
 	}
+}
+
+export async function invalidateToken(token: string) {
+	if (!envOptions["JWT_SECRET"]) throw new Error("UndefinedKeyValue");
+	const userPayload = verifyToken(token, envOptions["JWT_SECRET"]);
 }
 
 export function mintToken(user: User): {
@@ -53,7 +59,9 @@ export function mintToken(user: User): {
 	const ACCESS_TOKEN = signToken(user, envOptions["JWT_SECRET"], {
 		expiresIn: "5m",
 	});
-	const REFRESH_TOKEN = signToken(user, envOptions["JWT_REFRESH_SECRET"]);
+	const REFRESH_TOKEN = signToken(user, envOptions["JWT_REFRESH_SECRET"], {
+		expiresIn: "1d",
+	});
 	return {
 		ACCESS_TOKEN: ACCESS_TOKEN,
 		REFRESH_TOKEN: REFRESH_TOKEN,

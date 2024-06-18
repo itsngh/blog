@@ -14,6 +14,7 @@ loginRoute.post("/", async (req: Request, res: Response) => {
 	if (!user) return res.sendStatus(401);
 	if (await validatePassword(auth, secret)) {
 		const token = mintToken(user);
-		res.send(token);
+		return res.send(token);
 	}
+	return res.sendStatus(401);
 });

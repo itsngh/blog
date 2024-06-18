@@ -1,9 +1,8 @@
 import { PrismaClient, User, Auth, Post } from "@prisma/client";
-import { validateID } from "./sanitiser";
+import log from "./logger";
 type retrieveUserOpts = {
 	type: string;
 	withPosts?: boolean;
-	withAuth?: boolean;
 };
 
 export const prisma = new PrismaClient();
@@ -57,27 +56,6 @@ export async function retrieveUserSecret(
 			return null;
 	}
 }
-// export async function retrieveUserWithSecret(
-// 	term: string,
-// 	type: string
-// ): Promise<User | null> {
-// 	let user = null;
-// 	switch (type) {
-// 		case "uuid":
-// 			user = await prisma.user.findUnique({
-// 				where: { uuid: term },
-// 			});
-// 			break;
-// 		case "username":
-// 			user = await prisma.user.findUnique({
-// 				where: { username: term },
-// 			});
-// 			break;
-// 		default:
-// 			throw new SyntaxError();
-// 	}
-// 	return user;
-// }
 
 export async function retrievePost(uuid: string): Promise<Post | null> {
 	return await prisma.post.findUnique({
@@ -121,6 +99,48 @@ export async function addUser(
 	return user;
 }
 
-// export async function updatePost(post: Post, data: {}): Promise<Post> {}
+export async function updatePost(
+	post: Post,
+	title?: string,
+	description?: string,
+	content?: string
+): Promise<Post | null> {
+	if (
+		title == post.title &&
+		description == post.description &&
+		content == post.content
+	)
+		return post;
+	if (!title) return null;
+	const updatedPost: Post = await prisma.post.update({
+		where: {
+			uuid: post.uuid,
+		},
+		// if both props exist, use the right side of || operator
+		data: {
+			title: title,
+			description: description || post.description,
+			content: content || post.content,
+		},
+	});
+	return updatedPost;
+}
 
-// export async function updateUser(user: User): Promise<User> {}
+export async function updateUser(
+	user: User,
+	username?: string,
+	bio?: string
+): Promise<User | null> {
+	if (username == user.username && bio == user.bio) return user;
+	if (!username) return null;
+	const updatedUser: User = await prisma.user.update({
+		where: {
+			uuid: user.uuid,
+		},
+		data: {
+			username: username,
+			bio: bio || user.bio,
+		},
+	});
+	return updatedUser;
+}
