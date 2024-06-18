@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { validateToken } from "../utils/authenticate";
+import log from "../utils/logger";
 
 export function isAuthenticated(
 	req: Request,
@@ -7,10 +8,14 @@ export function isAuthenticated(
 	next: NextFunction
 ) {
 	const auth_header = req.headers.authorization;
-	if (!auth_header) res.sendStatus(401);
-	else {
-		const token = auth_header.split(" ")[1];
-		if (validateToken(token)) next();
-		else res.sendStatus(401);
-	}
+	log(`${auth_header}`, 5);
+	if (!auth_header) return res.sendStatus(401);
+	const token = auth_header.split(" ")[1];
+	log(`${token}`, 5);
+	if (!token) return res.sendStatus(401);
+	const user = validateToken(token);
+	log(`${user}`, 5);
+	if (!user) return res.sendStatus(401);
+	res.locals.user = user;
+	next();
 }

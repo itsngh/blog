@@ -21,11 +21,6 @@ server.use("/auth/register", registerRoute);
 server.use("/post", postRoute);
 server.use("/user", userRoute);
 
-// index aka landing page
-server.get("/", (req: Request, res: Response) => {
-	res.sendStatus(200);
-});
-
 server.listen(envOptions["BACKEND_PORT"], () => {
 	log(`server is up at port ${envOptions["BACKEND_PORT"]}`, 4);
 });

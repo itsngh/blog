@@ -17,12 +17,21 @@ model User {
 	uuid				String		@id	@db.Uuid @default(uuid())		@unique
 	created_at			DateTime	@default(now())
 	username			String											@unique
-	encrypted_secret	String
+	auth				Auth?
 	posts				Post[]
+	@@unique([uuid, username])
+}
+
+model Auth {
+	user				User		@relation(fields: [uuid, username], references: [uuid, username])
+	uuid				String		@id @db.Uuid						@unique
+	username			String											@unique
+	argon2id_hash		String
+	@@unique([uuid, username])
 }
 
 model Post {
-	uuid				String		@id	@db.Uuid						@unique
+	uuid				String		@id	@db.Uuid @default(uuid())		@unique
 	created_at			DateTime	@default(now())
 	title				String
 	description			String?

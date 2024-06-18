@@ -1,35 +1,83 @@
-import { PrismaClient, User, Post } from "@prisma/client";
+import { PrismaClient, User, Auth, Post } from "@prisma/client";
+import { validateID } from "./sanitiser";
+type retrieveUserOpts = {
+	type: string;
+	withPosts?: boolean;
+	withAuth?: boolean;
+};
 
 export const prisma = new PrismaClient();
 
-export async function retrieveUsers(): Promise<User[]> {
-	const users = await prisma.user.findMany({
-		include: { posts: true },
-	});
-	return users;
-}
-
 export async function retrieveUser(
 	term: string,
-	withPosts: boolean
+	options: retrieveUserOpts
 ): Promise<User | null> {
-	// term could be username or uuid
-	let user: User | null = null;
-	if (term.includes("-") && term.length == 12) {
-		// term is uuid
-		user = await prisma.user.findUnique({
-			where: { uuid: term },
-			include: { posts: withPosts },
-		});
-	} else {
-		// term is username
-		user = await prisma.user.findUnique({
-			where: { username: term },
-			include: { posts: withPosts },
-		});
+	switch (options.type) {
+		case "uuid":
+			return await prisma.user.findUnique({
+				where: {
+					uuid: term,
+				},
+				include: {
+					posts: options.withPosts,
+				},
+			});
+		case "username":
+			return await prisma.user.findUnique({
+				where: {
+					username: term,
+				},
+				include: {
+					posts: options.withPosts,
+				},
+			});
+		default:
+			return null;
 	}
-	return user;
 }
+
+export async function retrieveUserSecret(
+	term: string,
+	options: retrieveUserOpts
+): Promise<Auth | null> {
+	switch (options.type) {
+		case "uuid":
+			return await prisma.auth.findUnique({
+				where: {
+					uuid: term,
+				},
+			});
+		case "username":
+			return await prisma.auth.findUnique({
+				where: {
+					username: term,
+				},
+			});
+		default:
+			return null;
+	}
+}
+// export async function retrieveUserWithSecret(
+// 	term: string,
+// 	type: string
+// ): Promise<User | null> {
+// 	let user = null;
+// 	switch (type) {
+// 		case "uuid":
+// 			user = await prisma.user.findUnique({
+// 				where: { uuid: term },
+// 			});
+// 			break;
+// 		case "username":
+// 			user = await prisma.user.findUnique({
+// 				where: { username: term },
+// 			});
+// 			break;
+// 		default:
+// 			throw new SyntaxError();
+// 	}
+// 	return user;
+// }
 
 export async function retrievePost(uuid: string): Promise<Post | null> {
 	return await prisma.post.findUnique({
@@ -41,9 +89,20 @@ export async function retrievePost(uuid: string): Promise<Post | null> {
 
 export async function addPost(
 	title: string,
+	author: User,
 	description?: string,
 	content?: string
-) {}
+): Promise<Post> {
+	const post: Post = await prisma.post.create({
+		data: {
+			title: title,
+			description: description,
+			content: content,
+			author_uuid: author.uuid,
+		},
+	});
+	return post;
+}
 
 export async function addUser(
 	username: string,
@@ -52,12 +111,16 @@ export async function addUser(
 	const user: User = await prisma.user.create({
 		data: {
 			username: username,
-			encrypted_secret: encrypted_secret,
+			auth: {
+				create: {
+					argon2id_hash: encrypted_secret,
+				},
+			},
 		},
 	});
 	return user;
 }
 
-export async function updatePost() {}
+// export async function updatePost(post: Post, data: {}): Promise<Post> {}
 
-export async function updateUser() {}
+// export async function updateUser(user: User): Promise<User> {}

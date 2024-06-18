@@ -27,7 +27,7 @@ SUPABASE_URL				=	'postgres://postgres.[PROJECT-ID]:[PROJECT-PASSWORD]@[PROJECT-
 LOG_LEVEL					=	1
 ```
 
-Note: All variables must be set, otherwise it will refuse to run.
+Note: All variables must be set, otherwise it will throw a fatal error on request.
 
 -   For development:
 
