@@ -10,6 +10,7 @@ $ npm install
 
 ```
 ## JsonWebToken secret for minting access tokens
+## JsonWebToken secret for minting access tokens
 JWT_SECRET					=	''
 
 ## JsonWebToken secret for minting refresh tokens
@@ -24,6 +25,9 @@ POSTGRES_URL				=	''
 
 ## Logging level, 0: none, 1-5: FATAL, ERROR, WARNING, INFO, DEBUG
 LOG_LEVEL					=	1
+
+## Node Environment, either set to 'production' to suppress errors from being sent out to clients, or 'development' to enable errors as responses to REST requests.
+NODE_ENV					=	''
 ```
 
 Note: All variables must be set, otherwise it will throw a fatal error on request.
