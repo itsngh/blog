@@ -6,9 +6,6 @@ export const getUser = Router();
 
 getUser.get("/:term", async (req: Request, res: Response) => {
 	let term = req.params.term;
-	if (term.startsWith("@")) {
-		term = term.substring(1);
-	}
 	let user;
 	switch (validateID(term)) {
 		case "uuid":

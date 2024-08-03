@@ -28,7 +28,6 @@ model Post {
 	uuid				String		@id	@db.Uuid @default(uuid())		@unique
 	created_at			DateTime	@default(now())
 	title				String
-	description			String?
 	content				String?
 	author				User		@relation(fields: [author_uuid], references: [uuid])
 	author_uuid			String		@db.Uuid
@@ -40,13 +39,5 @@ model Auth {
 	uuid				String		@id @db.Uuid						@unique
 	username			String											@unique
 	argon2id_hash		String
-	invalidated_tokens	Token[]
 	@@unique([uuid, username])
-}
-
-model Token {
-	uuid				String					@id @db.Uuid
-	type				String
-	auth				Auth					@relation(fields: [uuid], references: [uuid])
-	value				String
 }
