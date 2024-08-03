@@ -18,35 +18,35 @@ model User {
 	created_at			DateTime	@default(now())
 	username			String											@unique
 	bio					String?
-	auth				Auth?
+	keys				Key[]
+	sessions			Session[]
 	posts				Post[]
 	@@unique([uuid, username])
 }
 
 
+model Key {
+	uuid				String		@id @db.Uuid @default(uuid())		@unique
+	key					String											@unique
+	hashed_secret		String
+	primary				Boolean
+	user				User		@relation(fields: [user_uuid], references: [uuid])
+	user_uuid			String		@db.Uuid
+}
+
 model Post {
 	uuid				String		@id	@db.Uuid @default(uuid())		@unique
 	created_at			DateTime	@default(now())
 	title				String
-	description			String?
 	content				String?
 	author				User		@relation(fields: [author_uuid], references: [uuid])
 	author_uuid			String		@db.Uuid
 }
 
 
-model Auth {
-	user				User		@relation(fields: [uuid, username], references: [uuid, username])
-	uuid				String		@id @db.Uuid						@unique
-	username			String											@unique
-	argon2id_hash		String
-	invalidated_tokens	Token[]
-	@@unique([uuid, username])
-}
-
-model Token {
-	uuid				String					@id @db.Uuid
-	type				String
-	auth				Auth					@relation(fields: [uuid], references: [uuid])
-	value				String
+model Session {
+	uuid				String		@id
+	user_uuid			String
+	expires_at			DateTime
+	user				User		@relation(fields: [user_uuid], references: [uuid], onDelete: Cascade)
 }

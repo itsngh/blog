@@ -1,13 +1,18 @@
 import { Router, Request, Response } from "express";
-import { isAuthenticated } from "../../middlewares/isAuthenticated";
-import { addPost as databaseAddPost } from "../../utils/database";
-import log from "../../utils/logger";
+import { sessionRoute } from "../../middlewares/authenticateSession";
 export const addPost = Router();
 
-addPost.post("/", isAuthenticated, async (req: Request, res: Response) => {
-	let { title, description, content } = req.body;
-	const user = res.locals.user;
-	const post = await databaseAddPost(title, user, description, content);
-	if (!post) return res.sendStatus(400);
-	res.send(post);
+addPost.post("/add", sessionRoute, async (req: Request, res: Response) => {
+	const { title, content } = req.body;
+	const session = res.locals.session;
+	if (!session.uuid) return res.sendStatus(401);
+	const post = await prisma.post.create({
+		data: {
+			author_uuid: session.uuid,
+			title: title,
+			content: content,
+		},
+	});
+	if (!post) return res.sendStatus(500);
+	return res.send(post);
 });

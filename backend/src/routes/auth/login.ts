@@ -1,20 +1,23 @@
 import { Router, Request, Response } from "express";
-import { mintToken, validatePassword } from "../../utils/authenticate";
-import { retrieveUser, retrieveUserSecret } from "../../utils/database";
-
+import { validateID } from "../../utils/sanitiser";
+import argon2 from "argon2";
+import redis, { createSession } from "../../utils/cache";
 export const loginRoute = Router();
 
 loginRoute.post("/", async (req: Request, res: Response) => {
 	const { username, secret } = req.body;
-	// you can actually login with uuid as your username :D
-	if (!username || !secret) return res.sendStatus(400);
-	const auth = await retrieveUserSecret(username, { type: "username" });
-	if (!auth) return res.sendStatus(401);
-	const user = await retrieveUser(username, { type: "username" });
-	if (!user) return res.sendStatus(401);
-	if (await validatePassword(auth, secret)) {
-		const token = mintToken(user);
-		return res.send(token);
-	}
-	return res.sendStatus(401);
+	if (!validateID(username) || secret.length < 8) return res.sendStatus(400);
+	const user = await prisma.user.findUnique({
+		where: { username: username },
+	});
+	if (!user) return res.sendStatus(404);
+	const retrieved_key = await prisma.key.findFirst({
+		where: { user_uuid: user.uuid },
+	});
+	if (!retrieved_key) return res.sendStatus(500);
+	if (!(await argon2.verify(retrieved_key.hashed_secret, secret)))
+		return res.sendStatus(404);
+	const session = await createSession(user.uuid);
+	if (!session) return res.sendStatus(500);
+	return res.send(session);
 });

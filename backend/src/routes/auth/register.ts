@@ -1,25 +1,32 @@
 import { Router, Request, Response } from "express";
-import { hashPassword, mintToken } from "../../utils/authenticate";
-import { retrieveUser, addUser } from "../../utils/database";
-import { User } from "@prisma/client";
 import { validateID } from "../../utils/sanitiser";
+import { retrieveUser } from "../../utils/database";
+import argon2 from "argon2";
+import { createSession } from "../../utils/cache";
+import log from "../../utils/logger";
 
 export const registerRoute = Router();
 
 registerRoute.post("/", async (req: Request, res: Response) => {
 	const { username, secret } = req.body;
-	if (
-		!username || // empty username
-		!secret || // empty password
-		username.length < 3 || // username.length is less than 3
-		secret.length < 8 || // password.length is less than 8
-		validateID(username) != "username" || // username contains foreign characters
-		(await retrieveUser(username, { type: "username" })) // user already exists
-	) {
+	if (validateID(username) !== "username" || secret.length < 8)
 		return res.sendStatus(400);
-	}
-	const encrypted_secret = await hashPassword(secret);
-	const user = await addUser(username, encrypted_secret);
-	const token = mintToken(user);
-	res.send(token);
+	if (await retrieveUser(username)) return res.sendStatus(400);
+	// all the checks have passed, its time to register the user
+	const user = await prisma.user.create({
+		data: {
+			username: username,
+			keys: {
+				create: {
+					key: `username:${username}`,
+					hashed_secret: await argon2.hash(secret),
+					primary: true,
+				},
+			},
+		},
+	});
+	if (!user) return res.sendStatus(500);
+	const session = await createSession(user.uuid);
+	if (!session) return res.sendStatus(500);
+	return res.send(session);
 });
