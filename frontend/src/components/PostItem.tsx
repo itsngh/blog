@@ -1,5 +1,3 @@
-import "./Post.css";
-
 export type PostProps = {
 	title: string;
 	content: string;
@@ -14,7 +12,7 @@ function terminateString(string: string, upToLength: number): string {
 	return string;
 }
 
-export function Post({ title, content, date, id }: PostProps) {
+export function PostItem({ title, content, date, id }: PostProps) {
 	const shortenedContent = terminateString(content, 20);
 	return (
 		<a className='postItem' href={id}>
